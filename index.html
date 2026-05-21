@@ -385,8 +385,8 @@
     <div class="gauge-label">💛 호감도</div>
     <div class="gauge-bar" style="position:relative">
       <div class="gauge-fill" id="s2-gauge" style="width:30%"></div>
-      <div style="position:absolute;left:40%;top:-18px;font-size:10px;color:#2ecc71;font-weight:700;transform:translateX(-50%)">통과 ▼</div>
-      <div style="position:absolute;left:40%;top:0;bottom:0;width:2px;background:#2ecc71;z-index:2"></div>
+      <div style="position:absolute;left:60%;top:-18px;font-size:10px;color:#2ecc71;font-weight:700;transform:translateX(-50%)">통과 ▼</div>
+      <div style="position:absolute;left:60%;top:0;bottom:0;width:2px;background:#2ecc71;z-index:2"></div>
     </div>
   </div>
   <div class="dialogue-area" id="s2-dialogue"></div>
@@ -686,37 +686,61 @@ function s1MashResult(success) {
 }
 
 // ===== STAGE 2 =====
-let s2Score = 30;
+let s2Score = 10;
 const s2Data = [
   {
     name: '와이프', text: '"왜 이렇게 일찍 와? 무슨 꿍꿍이야?"',
     choices: [
       { text: '"아이고 보고싶어서 달려왔지~"', score: 5, msg: '(안 속는 눈빛)' },
-      { text: '"애들 어린이집 끝나길래 바로 데려왔지"', score: 15, msg: '팩트 어필 성공!' },
-      { text: '"명주형이 밥 사준대서..."', score: -30, gameover: true, msg: '솔직하면 죽는다...' }
+      { text: '"애들 어린이집 끝나길래 바로 데려왔지"', score: 12, msg: '팩트 어필 성공!' },
+      { text: '"명주형이 밥 사준대서..."', score: -100, gameover: true, msg: '솔직하면 죽는다...' }
+    ]
+  },
+  {
+    name: '와이프', text: '"손 좀 씻고 와. 근데 오늘 왜 이렇게 눈치를 봐?"',
+    choices: [
+      { text: '"눈치 보는 거 아니고 요즘 내가 좀 반성 중이야"', score: 10, msg: '반성 카드 적중!' },
+      { text: '"원래 이렇게 잘해줬잖아 ㅎㅎ"', score: 3, msg: '(코웃음)' },
+      { text: '"아 맞다 오늘 저녁에..."', score: -5, msg: '타이밍이 너무 빠르다!' }
     ]
   },
   {
     name: '와이프', text: '"금요일 저녁에 나간다고?"',
     choices: [
-      { text: '"명주형이 회사에서 힘든 일이 있었나봐.\n좀 들어줘야 할 것 같아"', score: 20, msg: '의리 어필 성공!' },
-      { text: '"한 달에 한 번인데... 안 될까?"', score: 10, msg: '무난한 선택' },
+      { text: '"명주형이 회사에서 힘든 일이 있었나봐.\n좀 들어줘야 할 것 같아"', score: 15, msg: '의리 어필 성공!' },
+      { text: '"한 달에 한 번인데... 안 될까?"', score: 5, msg: '약한 어필...' },
       { text: '"남자는 가끔 밖에 나가야 해"', score: -100, gameover: true, msg: '현관문이 잠깁니다 🔒' }
     ]
   },
   {
-    name: '와이프', text: '"그래서 애들 밥은? 몇 시에 올 건데?"',
+    name: '와이프', text: '"명주씨는 맨날 불러내더라. 지난번엔 언제 왔어?"',
     choices: [
-      { text: '"배달 시켜놓고 갈게. 9시까지 무조건 올게.\n들어오면서 딸기 사올게"', score: 30, msg: '풀패키지 전략 성공! 🍓' },
-      { text: '"배달 시켜놓을게. 10시쯤?"', score: 10, msg: '그럭저럭...' },
-      { text: '"애들이 알아서 먹겠지..."', score: -100, gameover: true, msg: '...대화가 끊겼습니다' }
+      { text: '"한 달 전인가? 형도 미안하대.\n오늘 형이 쏜다고 했어"', score: 12, msg: '형 탓 전가 성공' },
+      { text: '"기억이 잘..."', score: 0, msg: '기억력 이슈...' },
+      { text: '"지난주? 아 아닌가..."', score: -10, msg: '"지난주에도 나갔잖아!!"' }
+    ]
+  },
+  {
+    name: '와이프', text: '"그래서 애들 밥은?"',
+    choices: [
+      { text: '"맘스터치 시켜놓고 갈게.\n나니 너겟 좋아하잖아"', score: 15, msg: '아이 취향 저격! 🍗' },
+      { text: '"배달 시켜놓을게"', score: 8, msg: '무난' },
+      { text: '"라면 끓여놓고 갈게"', score: 2, msg: '"애들한테 라면을?"' }
+    ]
+  },
+  {
+    name: '와이프', text: '"몇 시에 올 건데?"',
+    choices: [
+      { text: '"9시! 들어오면서 딸기케이크 사올게 🍰"', score: 18, msg: '풀패키지 전략 성공!' },
+      { text: '"9시까지는 올게"', score: 8, msg: '적당한 약속' },
+      { text: '"그건 명주형한테 달렸..."', score: -100, gameover: true, msg: '"그럼 거기서 자고 와"' }
     ]
   }
 ];
 let s2Step = 0;
 
 function s2Start() {
-  s2Score = 30; s2Step = 0;
+  s2Score = 10; s2Step = 0;
   document.getElementById('s2-gauge').style.width = s2Score + '%';
   s2Render();
 }
@@ -724,12 +748,11 @@ function s2Start() {
 function s2Render() {
   const area = document.getElementById('s2-dialogue');
   if (s2Step >= s2Data.length) {
-    // 결과
-    if (s2Score >= 40) {
+    if (s2Score >= 60) {
       const overlay = document.getElementById('s2-result');
       document.getElementById('s2-result-icon').textContent = '🔓';
       document.getElementById('s2-result-msg').textContent = '현관문이 열립니다!';
-      document.getElementById('s2-result-sub').textContent = '와이프: "딸기 빼먹으면 다음은 없어"';
+      document.getElementById('s2-result-sub').textContent = '와이프: "딸기케이크 빼먹으면 다음은 없어"';
       const btn = document.getElementById('s2-result-btn');
       btn.className = 'btn btn-primary'; btn.textContent = 'Stage 3으로';
       btn.onclick = () => { overlay.classList.remove('show'); showScreen('stage3'); s3Start(); };
@@ -763,7 +786,7 @@ function s2Choose(step, idx) {
   btns.forEach((b, i) => {
     b.style.pointerEvents = 'none';
     if (i === idx) {
-      b.classList.add(c.gameover ? 'gameover' : c.score >= 15 ? 'correct' : 'wrong');
+      b.classList.add(c.gameover ? 'gameover' : c.score >= 10 ? 'correct' : 'wrong');
     }
   });
 
@@ -826,10 +849,10 @@ function s3Render() {
   }
   document.getElementById('s3-slots').innerHTML = slotsHtml;
 
-  // pool
+  // pool (랜덤 배치)
   const shuffled = [...s3AllStations].sort(() => Math.random() - 0.5);
   let poolHtml = '';
-  s3AllStations.forEach(s => {
+  shuffled.forEach(s => {
     const used = s3Selected.includes(s);
     poolHtml += `<div class="pool-station${used ? ' used' : ''}" onclick="s3Pick('${s}')">${s}</div>`;
   });
@@ -893,10 +916,42 @@ function s3Fail(msg) {
 
 // ===== STAGE 4 =====
 let s4Step = 0;
+let s4ChargeTimer = null;
+let s4ChargeActive = false;
+
+// 충전 퀴즈 랜덤 데이터
+const s4ChargeProblems = [
+  { balance: 1200, fare: 3500 },
+  { balance: 800, fare: 3500 },
+  { balance: 2100, fare: 3500 },
+  { balance: 1500, fare: 3500 },
+  { balance: 500, fare: 3500 },
+  { balance: 1800, fare: 3500 },
+];
+let s4ChargeProbIdx = 0;
 
 function s4Start() {
   s4Step = 0;
+  s4ChargeProbIdx = 0;
   s4Render();
+}
+
+function s4GetChargeOptions(balance, fare) {
+  const need = fare - balance;
+  // 정답: 1000원 단위 올림
+  const correct = Math.ceil(need / 1000) * 1000;
+  // 오답들: 정답보다 1000원 적은 것, 정답+1000, 정답+2000
+  const wrong1 = correct - 1000;
+  const wrong2 = correct + 1000;
+  const wrong3 = correct + 2000;
+  let opts = [correct, wrong1, wrong2, wrong3].filter(v => v > 0);
+  // 중복 제거 후 부족하면 추가
+  opts = [...new Set(opts)];
+  while (opts.length < 4) opts.push(opts[opts.length-1] + 1000);
+  opts = opts.slice(0, 4);
+  // 셔플
+  for (let i = opts.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i+1)); [opts[i],opts[j]] = [opts[j],opts[i]]; }
+  return { correct, options: opts };
 }
 
 function s4Render() {
@@ -904,19 +959,40 @@ function s4Render() {
   const desc = document.getElementById('s4-desc');
 
   if (s4Step === 0) {
-    desc.textContent = '미니게임 1/3: 교통카드 충전';
+    // 충전 퀴즈 — 랜덤 금액, 4초 제한
+    const prob = s4ChargeProblems[s4ChargeProbIdx % s4ChargeProblems.length];
+    const { correct, options } = s4GetChargeOptions(prob.balance, prob.fare);
+    s4ChargeActive = true;
+    let timeLeft = 4;
+
+    desc.textContent = '미니게임 1/3: 교통카드 충전 (4초!)';
+    let optsHtml = options.map(v =>
+      `<button class="mini-opt" onclick="s4ChargeAnswer(${v},${correct})">${v.toLocaleString()}원</button>`
+    ).join('');
     content.innerHTML = `
+      <div style="text-align:center;font-size:28px;font-weight:900;color:#e74c3c;margin-bottom:10px" id="s4-charge-timer">4</div>
       <div class="mini-question">
-        교통카드 잔액: <strong>1,200원</strong><br>
-        서울역→대곡 GTX 요금: <strong>3,500원</strong><br><br>
-        얼마를 충전해야 할까?
+        교통카드 잔액: <strong>${prob.balance.toLocaleString()}원</strong><br>
+        GTX 요금: <strong>${prob.fare.toLocaleString()}원</strong><br><br>
+        <strong>정확히</strong> 얼마를 충전해야 할까?<br>
+        <span style="font-size:12px;color:#889">(1,000원 단위, 요금 이상 최소 금액)</span>
       </div>
-      <div class="mini-options">
-        <button class="mini-opt" onclick="s4Answer(0,1)">1,000원</button>
-        <button class="mini-opt" onclick="s4Answer(0,2)">2,000원</button>
-        <button class="mini-opt" onclick="s4Answer(0,3)">3,000원</button>
-        <button class="mini-opt" onclick="s4Answer(0,4)">5,000원</button>
-      </div>`;
+      <div class="mini-options">${optsHtml}</div>`;
+
+    if (s4ChargeTimer) clearInterval(s4ChargeTimer);
+    s4ChargeTimer = setInterval(() => {
+      if (!s4ChargeActive) return;
+      timeLeft--;
+      const el = document.getElementById('s4-charge-timer');
+      if (el) el.textContent = timeLeft;
+      if (timeLeft <= 0) {
+        s4ChargeActive = false;
+        clearInterval(s4ChargeTimer);
+        s4ChargeProbIdx++;
+        s4ChargeFail('지하철을 놓쳤습니다! 🚇');
+      }
+    }, 1000);
+
   } else if (s4Step === 1) {
     desc.textContent = '미니게임 2/3: 방향 선택';
     content.innerHTML = `
@@ -925,32 +1001,62 @@ function s4Render() {
         어느 방향으로 타야 할까?
       </div>
       <div class="mini-options">
-        <button class="mini-opt" onclick="s4Answer(1,1)">← 운정·킨텍스 방면</button>
-        <button class="mini-opt" onclick="s4Answer(1,2)">동탄·수서 방면 →</button>
+        <button class="mini-opt" onclick="s4DirAnswer(1)">← 운정·킨텍스 방면</button>
+        <button class="mini-opt" onclick="s4DirAnswer(2)">동탄·수서 방면 →</button>
       </div>`;
   } else if (s4Step === 2) {
-    desc.textContent = '미니게임 3/3: 카드 뒤집기';
+    desc.textContent = '미니게임 3/3: 카드 뒤집기 (40초)';
     s4StartMemory();
   }
 }
 
-function s4Answer(step, choice) {
-  const opts = document.querySelectorAll('.mini-opt');
-  const correct = (step === 0 && choice === 3) || (step === 1 && choice === 1);
+function s4ChargeAnswer(chosen, correct) {
+  if (!s4ChargeActive) return;
+  s4ChargeActive = false;
+  clearInterval(s4ChargeTimer);
 
-  opts.forEach((o, i) => {
+  const opts = document.querySelectorAll('.mini-opt');
+  opts.forEach(o => {
     o.style.pointerEvents = 'none';
-    if (step === 0) { if (i === 2) o.classList.add('correct'); else if (i === choice - 1 && choice !== 3) o.classList.add('wrong'); }
-    if (step === 1) { if (i === 0) o.classList.add('correct'); else if (i === choice - 1 && choice !== 1) o.classList.add('wrong'); }
+    const val = parseInt(o.textContent.replace(/[^0-9]/g, ''));
+    if (val === correct) o.classList.add('correct');
+    else if (val === chosen && chosen !== correct) o.classList.add('wrong');
   });
 
-  if (correct) {
+  if (chosen === correct) {
+    setTimeout(() => { s4Step++; s4Render(); }, 800);
+  } else {
+    s4ChargeProbIdx++;
+    setTimeout(() => s4ChargeFail('충전 금액이 틀렸습니다! 다음 열차를 기다립니다...'), 800);
+  }
+}
+
+function s4ChargeFail(msg) {
+  const overlay = document.getElementById('s4-result');
+  document.getElementById('s4-result-icon').textContent = '🚇';
+  document.getElementById('s4-result-msg').textContent = msg;
+  document.getElementById('s4-result-sub').textContent = '금액이 바뀝니다! 다시 계산하세요';
+  const btn = document.getElementById('s4-result-btn');
+  btn.className = 'btn btn-retry'; btn.textContent = '재시도';
+  btn.onclick = () => { overlay.classList.remove('show'); s4Render(); };
+  overlay.classList.add('show');
+}
+
+function s4DirAnswer(choice) {
+  const opts = document.querySelectorAll('.mini-opt');
+  opts.forEach((o, i) => {
+    o.style.pointerEvents = 'none';
+    if (i === 0) o.classList.add('correct');
+    else if (choice === 2) o.classList.add('wrong');
+  });
+
+  if (choice === 1) {
     setTimeout(() => { s4Step++; s4Render(); }, 800);
   } else {
     setTimeout(() => {
       const overlay = document.getElementById('s4-result');
-      document.getElementById('s4-result-icon').textContent = step === 0 ? '💳' : '😱';
-      document.getElementById('s4-result-msg').textContent = step === 0 ? '잔액이 부족합니다!' : '동탄행 열차에 탑승했습니다!';
+      document.getElementById('s4-result-icon').textContent = '😱';
+      document.getElementById('s4-result-msg').textContent = '동탄행 열차에 탑승했습니다!';
       document.getElementById('s4-result-sub').textContent = '다시 도전!';
       const btn = document.getElementById('s4-result-btn');
       btn.className = 'btn btn-retry'; btn.textContent = '재시도';
@@ -968,12 +1074,12 @@ function s4StartMemory() {
   let flipped = [];
   let matched = 0;
   let locked = false;
-  let memTimer = 15;
+  let memTimer = 40;
   let memInterval = null;
   let memActive = true;
 
   const content = document.getElementById('s4-content');
-  let html = '<div style="text-align:center;font-size:24px;font-weight:900;color:#e74c3c;margin-bottom:10px" id="s4-mem-timer">15</div>';
+  let html = '<div style="text-align:center;font-size:24px;font-weight:900;color:#e74c3c;margin-bottom:10px" id="s4-mem-timer">40</div>';
   html += '<div class="memory-grid">';
   cards.forEach((c, i) => {
     html += `<div class="memory-card" data-idx="${i}" data-val="${c}">${c}</div>`;
