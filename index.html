@@ -1051,12 +1051,12 @@ function s4StartMemory() {
   let flipped = [];
   let matched = 0;
   let locked = false;
-  let memTimer = 30;
+  let memTimer = 25;
   let memInterval = null;
   let memActive = true;
 
   const content = document.getElementById('s4-content');
-  let html = '<div style="text-align:center;font-size:24px;font-weight:900;color:#e74c3c;margin-bottom:10px" id="s4-mem-timer">30</div>';
+  let html = '<div style="text-align:center;font-size:24px;font-weight:900;color:#e74c3c;margin-bottom:10px" id="s4-mem-timer">25</div>';
   html += '<div class="memory-grid">';
   cards.forEach((c, i) => {
     html += `<div class="memory-card" data-idx="${i}" data-val="${c}">${c}</div>`;
@@ -1127,62 +1127,92 @@ let s5Timer = null;
 let s5Active = false;
 
 // 명주형이 카톡을 빠르게 보내고 사라짐 → 기억해서 정답 골라야 함
-const s5Rounds = [
+// 각 라운드마다 질문 변형 풀 — 매번 랜덤 선택
+const s5RoundPool = [
+  // Round 1: 출구 + 가게
   {
-    kakao: '고기집 자리 없대 ㅋㅋ 다른 데 알아봄',
-    kakao2: '여기 괜찮은 데 있다\n마두역 3번출구 파란간판 "명가숯불갈비"',
-    showTime: 3000,
-    question: '명주형이 말한 출구 번호는?',
-    options: ['1번 출구', '2번 출구', '3번 출구', '4번 출구'],
-    answer: 2, // idx
-    timeLimit: 5,
-    failMsg: '출구를 잘못 나왔습니다...'
+    kakaoPairs: [
+      { k1: '고기집 자리 없대 ㅋㅋ 다른 데 알아봄', k2: '여기 괜찮은 데 있다\n마두역 3번출구 파란간판 "명가숯불갈비"' },
+      { k1: '아 원래 가려던 데 웨이팅 1시간이래', k2: '대신 마두역 3번출구 앞 "명가숯불갈비"\n파란간판이야 바로 보여' },
+    ],
+    questions: [
+      { q: '명주형이 말한 출구 번호는?', opts: ['1번 출구', '2번 출구', '3번 출구', '4번 출구'], ans: 2 },
+      { q: '가게 간판 색은?', opts: ['빨간색', '파란색', '초록색', '노란색'], ans: 1 },
+      { q: '가게 이름은?', opts: ['명가숯불갈비', '마두숯불갈비', '명주네갈비', '양재숯불갈비'], ans: 0 },
+    ],
+    showTime: 3000, timeLimit: 5, failMsg: '길을 잃었습니다...'
   },
+  // Round 2: 예약
   {
-    kakao: '아 그리고 가게 들어오면\n내 이름으로 예약했어 2명',
-    kakao2: '예약명 김명주 ㄱㄱ',
-    showTime: 2500,
-    question: '예약명은?',
-    options: ['박주석', '김명주', '김주석', '박명주'],
-    answer: 1,
-    timeLimit: 4,
-    failMsg: '예약을 못 찾았습니다...'
+    kakaoPairs: [
+      { k1: '아 그리고 가게 들어오면\n내 이름으로 예약했어 2명', k2: '예약명 김명주 ㄱㄱ' },
+      { k1: '예약 해놨으니까 들어가서 말해', k2: '김명주 2명이요~ 하면 돼' },
+    ],
+    questions: [
+      { q: '예약명은?', opts: ['박주석', '김명주', '김주석', '박명주'], ans: 1 },
+      { q: '예약 인원은?', opts: ['1명', '2명', '3명', '4명'], ans: 1 },
+    ],
+    showTime: 2500, timeLimit: 4, failMsg: '예약을 못 찾았습니다...'
   },
+  // Round 3: 외형
   {
-    kakao: '아 맞다 내가 지금 입구에서 기다리고 있는데',
-    kakao2: '검은 패딩에 회색 모자 쓰고 있어\n빨리 와 배고파 죽겠다 🥩',
-    showTime: 2500,
-    question: '명주형이 쓰고 있는 모자 색은?',
-    options: ['검은색', '흰색', '회색', '파란색'],
-    answer: 2,
-    timeLimit: 4,
-    failMsg: '다른 사람한테 말을 걸었습니다...'
+    kakaoPairs: [
+      { k1: '아 맞다 내가 지금 입구에서 기다리고 있는데', k2: '검은 패딩에 회색 모자 쓰고 있어\n빨리 와 배고파 죽겠다 🥩' },
+      { k1: '나 가게 앞에 서있어', k2: '검은 패딩 입고 회색 모자 썼으니까\n찾기 쉬울거야 ㅋㅋ' },
+    ],
+    questions: [
+      { q: '명주형이 쓰고 있는 모자 색은?', opts: ['검은색', '흰색', '회색', '파란색'], ans: 2 },
+      { q: '명주형이 입고 있는 겉옷은?', opts: ['검은 패딩', '회색 코트', '파란 점퍼', '검은 코트'], ans: 0 },
+      { q: '명주형은 지금 어디에 있어?', opts: ['테이블에 앉아있음', '입구에서 기다림', '주차장', '화장실'], ans: 1 },
+    ],
+    showTime: 2500, timeLimit: 4, failMsg: '다른 사람한테 말을 걸었습니다...'
   },
+  // Round 4: 메뉴
   {
-    kakao: '너 도착하면 바로 주문할건데',
-    kakao2: '생갈비 2인분이랑 물냉 하나\n된장찌개 하나 시킬게\n너 소주 몇 병 마실래?',
-    showTime: 3000,
-    question: '명주형이 시키겠다고 한 메뉴가 아닌 것은?',
-    options: ['생갈비', '물냉', '비빔냉면', '된장찌개'],
-    answer: 2,
-    timeLimit: 5,
-    failMsg: '주문을 틀렸습니다...'
+    kakaoPairs: [
+      { k1: '너 도착하면 바로 주문할건데', k2: '생갈비 2인분이랑 물냉 하나\n된장찌개 하나 시킬게\n너 소주 몇 병 마실래?' },
+      { k1: '메뉴는 내가 정했다', k2: '생갈비 2인분에 물냉 하나\n된장찌개 하나 ㄱ\n음료는 네가 골라' },
+    ],
+    questions: [
+      { q: '명주형이 시키겠다고 한 메뉴가 아닌 것은?', opts: ['생갈비', '물냉', '비빔냉면', '된장찌개'], ans: 2 },
+      { q: '생갈비 몇 인분?', opts: ['1인분', '2인분', '3인분', '4인분'], ans: 1 },
+      { q: '냉면 종류는?', opts: ['비빔냉면', '물냉면', '쫄면', '밀면'], ans: 1 },
+    ],
+    showTime: 3000, timeLimit: 5, failMsg: '주문을 틀렸습니다...'
   },
+  // Round 5: 테이블
   {
-    kakao: '야 거의 다 왔지?',
-    kakao2: '나 테이블 8번에 앉아있어\n빨리 와!!!',
-    showTime: 2000,
-    question: '테이블 번호는?',
-    options: ['6번', '7번', '8번', '9번'],
-    answer: 2,
-    timeLimit: 3,
-    failMsg: '엉뚱한 테이블에 앉았습니다...'
+    kakaoPairs: [
+      { k1: '야 거의 다 왔지?', k2: '나 테이블 8번에 앉아있어\n빨리 와!!!' },
+      { k1: '나 먼저 들어가서 앉아있을게', k2: '테이블 8번이야\n물은 셀프래 ㅋㅋ' },
+    ],
+    questions: [
+      { q: '테이블 번호는?', opts: ['6번', '7번', '8번', '9번'], ans: 2 },
+      { q: '명주형이 추가로 알려준 정보는?', opts: ['와이파이 비번', '물은 셀프', '주차 무료', '화장실 위치'], ans: 1 },
+    ],
+    showTime: 2000, timeLimit: 3, failMsg: '엉뚱한 테이블에 앉았습니다...'
   }
 ];
+
+// 매 게임마다 랜덤으로 질문 조합
+let s5Rounds = [];
+function s5BuildRounds() {
+  s5Rounds = s5RoundPool.map(pool => {
+    const kp = pool.kakaoPairs[Math.floor(Math.random() * pool.kakaoPairs.length)];
+    const qi = Math.floor(Math.random() * pool.questions.length);
+    const q = pool.questions[qi];
+    return {
+      kakao: kp.k1, kakao2: kp.k2,
+      showTime: pool.showTime, timeLimit: pool.timeLimit, failMsg: pool.failMsg,
+      question: q.q, options: q.opts, answer: q.ans
+    };
+  });
+}
 
 function s5Start() {
   s5Step = 0;
   s5Active = true;
+  s5BuildRounds();
   s5ShowKakao();
 }
 
