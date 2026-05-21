@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>박주석의 대장정</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { width: 100%; height: 100%; overflow: hidden; touch-action: manipulation; }
+  body { font-family: 'Noto Sans KR', sans-serif; background: #0a0a1a; color: #fff; }
+
+  /* ===== 공통 ===== */
+  .screen { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; flex-direction: column; align-items: center; justify-content: center; }
+  .screen.active { display: flex; }
+  .btn {
+    padding: 14px 36px; border: none; border-radius: 12px; font-size: 18px; font-weight: 700;
+    font-family: 'Noto Sans KR', sans-serif; cursor: pointer; transition: transform 0.1s;
+  }
+  .btn:active { transform: scale(0.95); }
+  .btn-primary { background: #2980b9; color: #fff; }
+  .btn-retry { background: #e74c3c; color: #fff; }
+
+  /* ===== 인트로 ===== */
+  #intro { background: linear-gradient(135deg, #0a0a2e 0%, #1a1a4e 100%); text-align: center; padding: 40px 24px; }
+  #intro h1 { font-size: 32px; font-weight: 900; margin-bottom: 8px; }
+  #intro .subtitle { font-size: 16px; color: #aab; margin-bottom: 32px; }
+  #intro .story {
+    background: rgba(255,255,255,0.06); border-radius: 16px; padding: 24px;
+    margin-bottom: 32px; text-align: left; max-width: 400px;
+  }
+  #intro .story p { font-size: 14px; color: #ccd; line-height: 1.8; }
+  #intro .story .kakao {
+    background: #ffe812; color: #333; padding: 10px 14px; border-radius: 12px;
+    margin: 12px 0; font-size: 14px; font-weight: 600; display: inline-block;
+  }
+
+  /* ===== Stage 공통 ===== */
+  .stage-header {
+    position: absolute; top: 0; left: 0; right: 0;
+    padding: 20px 24px 16px; text-align: center;
+    background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 100%);
+  }
+  .stage-header .stage-num { font-size: 12px; color: #2980b9; font-weight: 700; letter-spacing: 2px; }
+  .stage-header h2 { font-size: 20px; font-weight: 800; margin-top: 4px; }
+  .stage-header .desc { font-size: 13px; color: #aab; margin-top: 6px; line-height: 1.5; }
+
+  /* ===== Stage 1 ===== */
+  #stage1 { background: linear-gradient(135deg, #1a1a3e 0%, #0d1b2a 100%); }
+
+  .timing-area { width: 100%; max-width: 400px; padding: 0 24px; }
+
+  /* 타이밍 바 */
+  .timing-bar-wrap {
+    position: relative; width: 100%; height: 56px;
+    background: rgba(255,255,255,0.08); border-radius: 28px;
+    overflow: hidden; margin-bottom: 20px;
+  }
+  .timing-bar-track { position: relative; width: 100%; height: 100%; }
+  .timing-target {
+    position: absolute; top: 0; height: 100%; width: 4px;
+    background: #2ecc71; z-index: 2;
+  }
+  .timing-target-zone {
+    position: absolute; top: 0; height: 100%;
+    background: rgba(46,204,113,0.15); z-index: 1;
+  }
+  .timing-target .target-label {
+    position: absolute; top: -28px; left: 50%; transform: translateX(-50%);
+    font-size: 11px; color: #2ecc71; white-space: nowrap; font-weight: 700;
+  }
+  .timing-needle {
+    position: absolute; top: 4px; bottom: 4px; width: 6px;
+    background: #e74c3c; border-radius: 3px; z-index: 3;
+    box-shadow: 0 0 10px rgba(231,76,60,0.6);
+    transition: none;
+  }
+
+  .timing-label {
+    text-align: center; font-size: 16px; font-weight: 700;
+    margin-bottom: 16px; min-height: 24px;
+  }
+
+  .phase-indicator {
+    display: flex; justify-content: center; gap: 8px; margin-bottom: 24px;
+  }
+  .phase-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+  }
+  .phase-dot.done { background: #2ecc71; }
+  .phase-dot.current { background: #e74c3c; box-shadow: 0 0 8px rgba(231,76,60,0.6); }
+
+  /* 터치 영역 */
+  .tap-zone {
+    width: 100%; max-width: 400px; height: 120px;
+    background: rgba(255,255,255,0.04); border: 2px dashed rgba(255,255,255,0.15);
+    border-radius: 20px; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: #889; font-weight: 600; cursor: pointer;
+    margin-top: 12px;
+  }
+  .tap-zone:active { background: rgba(255,255,255,0.08); }
+
+  /* ===== Phase 3: 연타 ===== */
+  .mash-area { width: 100%; max-width: 400px; padding: 0 24px; text-align: center; }
+
+  .mash-scene {
+    position: relative; width: 100%; height: 100px;
+    background: rgba(255,255,255,0.04); border-radius: 12px;
+    overflow: hidden; margin-bottom: 16px;
+  }
+  .mash-road {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 30px;
+    background: #333; border-top: 2px dashed #555;
+  }
+  .mash-car {
+    position: absolute; bottom: 32px; font-size: 36px;
+    transition: left 0.1s;
+  }
+  .mash-home {
+    position: absolute; bottom: 32px; right: 12px; font-size: 32px;
+  }
+
+  .mash-gauge-wrap {
+    width: 100%; height: 32px; background: rgba(255,255,255,0.1);
+    border-radius: 16px; overflow: hidden; margin-bottom: 8px;
+  }
+  .mash-gauge {
+    height: 100%; background: linear-gradient(90deg, #e74c3c, #e67e22, #2ecc71);
+    border-radius: 16px; width: 0%; transition: width 0.05s;
+  }
+
+  .mash-timer { font-size: 36px; font-weight: 900; color: #e74c3c; margin-bottom: 12px; }
+
+  .mash-tap-zone {
+    width: 100%; height: 160px;
+    background: rgba(231,76,60,0.1); border: 3px solid rgba(231,76,60,0.3);
+    border-radius: 24px; display: flex; align-items: center; justify-content: center;
+    font-size: 20px; color: #e74c3c; font-weight: 800; cursor: pointer;
+  }
+  .mash-tap-zone:active { background: rgba(231,76,60,0.2); }
+
+  /* ===== 결과/전환 화면 ===== */
+  .result-overlay {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85); display: none;
+    flex-direction: column; align-items: center; justify-content: center;
+    z-index: 10; text-align: center; padding: 24px;
+  }
+  .result-overlay.show { display: flex; }
+  .result-overlay .result-icon { font-size: 64px; margin-bottom: 16px; }
+  .result-overlay .result-msg { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .result-overlay .result-sub { font-size: 14px; color: #aab; margin-bottom: 24px; line-height: 1.6; }
+
+  /* ===== Stage 2: 와이프 설득 ===== */
+  #stage2 { background: linear-gradient(135deg, #2d1b00 0%, #1a1a2e 100%); }
+  .dialogue-area { width: 100%; max-width: 420px; padding: 0 20px; }
+  .dialogue-bubble {
+    background: rgba(255,255,255,0.08); border-radius: 16px;
+    padding: 20px; margin-bottom: 16px;
+  }
+  .dialogue-name { font-size: 12px; color: #f39c12; font-weight: 700; margin-bottom: 6px; }
+  .dialogue-text { font-size: 15px; line-height: 1.6; }
+  .dialogue-choices { display: flex; flex-direction: column; gap: 10px; }
+  .choice-btn {
+    width: 100%; padding: 14px 18px; border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 14px; background: rgba(255,255,255,0.04);
+    color: #fff; font-size: 14px; text-align: left; cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif; line-height: 1.5; transition: all 0.15s;
+  }
+  .choice-btn:active { background: rgba(41,128,185,0.2); border-color: #2980b9; }
+  .choice-btn.correct { background: rgba(46,204,113,0.2); border-color: #2ecc71; }
+  .choice-btn.wrong { background: rgba(231,76,60,0.2); border-color: #e74c3c; }
+  .choice-btn.gameover { background: rgba(231,76,60,0.3); border-color: #e74c3c; }
+
+  .gauge-wrap {
+    width: 100%; max-width: 420px; padding: 0 20px; margin-bottom: 20px;
+  }
+  .gauge-label { font-size: 12px; color: #f39c12; margin-bottom: 6px; font-weight: 600; }
+  .gauge-bar {
+    width: 100%; height: 12px; background: rgba(255,255,255,0.1);
+    border-radius: 6px; overflow: hidden;
+  }
+  .gauge-fill {
+    height: 100%; background: linear-gradient(90deg, #e74c3c, #f39c12, #2ecc71);
+    border-radius: 6px; transition: width 0.5s;
+  }
+
+  /* ===== Stage 3: 노선도 ===== */
+  #stage3 { background: linear-gradient(135deg, #0d1b2a 0%, #1b2a4a 100%); }
+  .route-area { width: 100%; max-width: 420px; padding: 0 20px; }
+  .station-slots {
+    display: flex; align-items: center; gap: 4px;
+    flex-wrap: wrap; justify-content: center;
+    min-height: 60px; padding: 12px;
+    background: rgba(255,255,255,0.04); border: 2px dashed rgba(255,255,255,0.15);
+    border-radius: 16px; margin-bottom: 16px;
+  }
+  .slot-arrow { font-size: 16px; color: #555; }
+  .slot-station {
+    padding: 8px 12px; background: #2980b9; border-radius: 8px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .slot-station:active { opacity: 0.7; }
+  .slot-placeholder {
+    width: 72px; height: 36px; border: 2px dashed rgba(255,255,255,0.2);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: #556;
+  }
+
+  .station-pool {
+    display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 16px;
+  }
+  .pool-station {
+    padding: 10px 14px; background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15); border-radius: 10px;
+    font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s;
+  }
+  .pool-station:active { background: rgba(41,128,185,0.3); }
+  .pool-station.used { opacity: 0.3; pointer-events: none; }
+  .pool-station.wrong-flash { background: rgba(231,76,60,0.3); border-color: #e74c3c; }
+
+  .route-timer { text-align: center; font-size: 28px; font-weight: 900; color: #e74c3c; margin-bottom: 12px; }
+  .route-hint { text-align: center; font-size: 12px; color: #667; margin-bottom: 12px; line-height: 1.5; }
+
+  .route-buttons { display: flex; gap: 10px; justify-content: center; }
+
+  /* ===== Stage 4: GTX 탑승 ===== */
+  #stage4 { background: linear-gradient(135deg, #0a1628 0%, #1a2a4a 100%); }
+  .mini-area { width: 100%; max-width: 420px; padding: 0 20px; text-align: center; }
+  .mini-question {
+    background: rgba(255,255,255,0.06); border-radius: 16px;
+    padding: 24px; margin-bottom: 20px; font-size: 15px; line-height: 1.7;
+  }
+  .mini-options { display: flex; flex-direction: column; gap: 10px; }
+  .mini-opt {
+    padding: 14px; border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 12px; background: rgba(255,255,255,0.04);
+    color: #fff; font-size: 15px; font-weight: 600; cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif; transition: all 0.15s;
+  }
+  .mini-opt:active { background: rgba(41,128,185,0.2); }
+  .mini-opt.correct { background: rgba(46,204,113,0.2); border-color: #2ecc71; }
+  .mini-opt.wrong { background: rgba(231,76,60,0.2); border-color: #e74c3c; }
+
+  /* 기억력 게임 */
+  .memory-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 8px; max-width: 320px; margin: 0 auto 16px;
+  }
+  .memory-card {
+    aspect-ratio: 1; border-radius: 10px;
+    background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+    color: transparent; user-select: none;
+  }
+  .memory-card.flipped { background: #2980b9; border-color: #3498db; color: #fff; }
+  .memory-card.matched { background: #27ae60; border-color: #2ecc71; color: #fff; }
+
+  /* ===== Stage 5: 미로 ===== */
+  #stage5 { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); }
+  .maze-area { width: 100%; max-width: 360px; padding: 0 20px; }
+  .maze-grid {
+    display: grid; gap: 0;
+    margin: 0 auto 16px;
+  }
+  .maze-cell {
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+    font-size: 8px; border: 1px solid rgba(255,255,255,0.05);
+  }
+  .maze-cell.wall { background: rgba(255,255,255,0.08); }
+  .maze-cell.path { background: rgba(255,255,255,0.02); cursor: pointer; }
+  .maze-cell.player { background: #2980b9; border-radius: 50%; font-size: 14px; }
+  .maze-cell.exit { background: rgba(46,204,113,0.2); font-size: 10px; font-weight: 700; color: #2ecc71; }
+  .maze-cell.wrong-exit { background: rgba(231,76,60,0.2); font-size: 10px; font-weight: 700; color: #e74c3c; }
+  .maze-controls {
+    display: grid; grid-template-columns: repeat(3, 60px);
+    grid-template-rows: repeat(3, 60px); gap: 4px;
+    justify-content: center; margin-top: 12px;
+  }
+  .maze-btn {
+    border: 2px solid rgba(255,255,255,0.15); border-radius: 12px;
+    background: rgba(255,255,255,0.06); color: #fff; font-size: 24px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+  .maze-btn:active { background: rgba(41,128,185,0.3); }
+  .maze-timer { text-align: center; font-size: 24px; font-weight: 900; color: #e74c3c; margin-bottom: 12px; }
+
+  /* ===== 엔딩 ===== */
+  #ending { background: linear-gradient(135deg, #0a2e0a 0%, #1a1a3e 100%); text-align: center; padding: 40px 24px; }
+  #ending .rank { font-size: 80px; margin-bottom: 8px; }
+  #ending .rank-text { font-size: 28px; font-weight: 900; margin-bottom: 8px; }
+  #ending .rank-desc { font-size: 15px; color: #aab; margin-bottom: 8px; line-height: 1.6; }
+  #ending .time-result { font-size: 14px; color: #889; margin-bottom: 32px; }
+  .ending-dialogue {
+    background: rgba(255,255,255,0.06); border-radius: 16px;
+    padding: 20px; margin-bottom: 24px; max-width: 400px; text-align: left;
+  }
+  .ending-dialogue p { font-size: 14px; line-height: 1.8; color: #ccd; }
+</style>
+</head>
+<body>
+
+<!-- ===== 인트로 ===== -->
+<div id="intro" class="screen active">
+  <h1>박주석의 대장정</h1>
+  <p class="subtitle">양재에서 마두까지</p>
+  <div class="story">
+    <p>금요일 저녁 5시 40분.</p>
+    <p>명주형에게서 카톡이 온다.</p>
+    <div class="kakao">주석아 오늘 마두역 앞 고기집 7시 ㄱ?</div>
+    <p style="margin-top:8px">"넵 형 ㄱㄱ"</p>
+    <p style="margin-top:12px;color:#889">보낸 건 좋은데...<br>아이 둘을 하원시키고, 와이프를 설득하고,<br>생전 처음 GTX를 타야 한다.</p>
+  </div>
+  <button class="btn btn-primary" onclick="startGame()">미션 시작</button>
+</div>
+
+<!-- ===== Stage 1 ===== -->
+<div id="stage1" class="screen">
+  <div class="stage-header">
+    <div class="stage-num">STAGE 1</div>
+    <h2>퇴근 & 하원 전쟁</h2>
+    <div class="desc" id="s1-desc">정확한 타이밍에 클릭하세요!</div>
+  </div>
+
+  <!-- 전체 Phase 통합 -->
+  <div id="s1-game" class="timing-area">
+    <div class="phase-indicator">
+      <div class="phase-dot" id="phase-dot-1"></div>
+      <div class="phase-dot" id="phase-dot-2"></div>
+      <div class="phase-dot" id="phase-dot-3"></div>
+    </div>
+
+    <!-- Phase 아이콘 -->
+    <div id="s1-phase-icon" style="font-size:48px;text-align:center;margin-bottom:8px">🏢</div>
+    <div class="timing-label" id="s1-timing-label">6:00 퇴근 타이밍에 맞춰라!</div>
+
+    <!-- 타이밍 바 (Phase 1&2) -->
+    <div id="s1-bar-section">
+      <div class="timing-bar-wrap" id="s1-bar-wrap">
+        <div class="timing-bar-track">
+          <div class="timing-target-zone" id="s1-target-zone"></div>
+          <div class="timing-target" id="s1-target">
+            <div class="target-label" id="s1-target-label">6:00</div>
+          </div>
+          <div class="timing-needle" id="s1-needle"></div>
+        </div>
+      </div>
+      <div class="tap-zone" id="s1-tap">TAP!</div>
+    </div>
+
+    <!-- 연타 (Phase 3) -->
+    <div id="s1-mash-section" style="display:none">
+      <div class="mash-timer" id="s1-mash-timer">5.00</div>
+      <div class="mash-scene">
+        <div class="mash-road"></div>
+        <div class="mash-car" id="s1-car" style="left:8%">🚗</div>
+        <div class="mash-home">🏠</div>
+      </div>
+      <div class="mash-gauge-wrap">
+        <div class="mash-gauge" id="s1-gauge"></div>
+      </div>
+      <div class="mash-tap-zone" id="s1-mash-tap">🚗 연타!! 🚗</div>
+    </div>
+  </div>
+
+  <div class="result-overlay" id="s1-result">
+    <div class="result-icon" id="s1-result-icon"></div>
+    <div class="result-msg" id="s1-result-msg"></div>
+    <div class="result-sub" id="s1-result-sub"></div>
+    <button class="btn" id="s1-result-btn"></button>
+  </div>
+</div>
+
+<!-- ===== Stage 2 ===== -->
+<div id="stage2" class="screen">
+  <div class="stage-header">
+    <div class="stage-num">STAGE 2</div>
+    <h2>와이프 설득</h2>
+    <div class="desc">호감도를 채워 현관문을 열어라!</div>
+  </div>
+  <div class="gauge-wrap">
+    <div class="gauge-label">💛 호감도</div>
+    <div class="gauge-bar" style="position:relative">
+      <div class="gauge-fill" id="s2-gauge" style="width:30%"></div>
+      <div style="position:absolute;left:40%;top:-18px;font-size:10px;color:#2ecc71;font-weight:700;transform:translateX(-50%)">통과 ▼</div>
+      <div style="position:absolute;left:40%;top:0;bottom:0;width:2px;background:#2ecc71;z-index:2"></div>
+    </div>
+  </div>
+  <div class="dialogue-area" id="s2-dialogue"></div>
+  <div class="result-overlay" id="s2-result">
+    <div class="result-icon" id="s2-result-icon"></div>
+    <div class="result-msg" id="s2-result-msg"></div>
+    <div class="result-sub" id="s2-result-sub"></div>
+    <button class="btn" id="s2-result-btn"></button>
+  </div>
+</div>
+
+<!-- ===== Stage 3 ===== -->
+<div id="stage3" class="screen">
+  <div class="stage-header">
+    <div class="stage-num">STAGE 3</div>
+    <h2>노선도 대작전</h2>
+    <div class="desc">양재역→마두역 최단루트를 완성하라!</div>
+  </div>
+  <div class="route-area">
+    <div class="route-timer" id="s3-timer">60</div>
+    <div class="route-hint">GTX는 서울역에서 반드시 탑승!<br>올바른 순서로 역을 선택하세요</div>
+    <div class="station-slots" id="s3-slots"></div>
+    <div class="station-pool" id="s3-pool"></div>
+    <div class="route-buttons">
+      <button class="btn btn-retry" onclick="s3Reset()" style="font-size:14px;padding:10px 20px">초기화</button>
+      <button class="btn btn-primary" onclick="s3Submit()" style="font-size:14px;padding:10px 20px">확인!</button>
+    </div>
+  </div>
+  <div class="result-overlay" id="s3-result">
+    <div class="result-icon" id="s3-result-icon"></div>
+    <div class="result-msg" id="s3-result-msg"></div>
+    <div class="result-sub" id="s3-result-sub"></div>
+    <button class="btn" id="s3-result-btn"></button>
+  </div>
+</div>
+
+<!-- ===== Stage 4 ===== -->
+<div id="stage4" class="screen">
+  <div class="stage-header">
+    <div class="stage-num">STAGE 4</div>
+    <h2>GTX 첫 탑승</h2>
+    <div class="desc" id="s4-desc"></div>
+  </div>
+  <div class="mini-area" id="s4-content"></div>
+  <div class="result-overlay" id="s4-result">
+    <div class="result-icon" id="s4-result-icon"></div>
+    <div class="result-msg" id="s4-result-msg"></div>
+    <div class="result-sub" id="s4-result-sub"></div>
+    <button class="btn" id="s4-result-btn"></button>
+  </div>
+</div>
+
+<!-- ===== Stage 5 ===== -->
+<div id="stage5" class="screen">
+  <div class="stage-header">
+    <div class="stage-num">STAGE 5</div>
+    <h2>라스트 스퍼트</h2>
+    <div class="desc">마두역 3번 출구를 찾아라!</div>
+  </div>
+  <div class="maze-area">
+    <div class="maze-timer" id="s5-timer">30</div>
+    <div class="maze-grid" id="s5-maze"></div>
+    <div class="maze-controls">
+      <div></div>
+      <button class="maze-btn" onclick="s5Move(0,-1)">↑</button>
+      <div></div>
+      <button class="maze-btn" onclick="s5Move(-1,0)">←</button>
+      <div></div>
+      <button class="maze-btn" onclick="s5Move(1,0)">→</button>
+      <div></div>
+      <button class="maze-btn" onclick="s5Move(0,1)">↓</button>
+      <div></div>
+    </div>
+  </div>
+  <div class="result-overlay" id="s5-result">
+    <div class="result-icon" id="s5-result-icon"></div>
+    <div class="result-msg" id="s5-result-msg"></div>
+    <div class="result-sub" id="s5-result-sub"></div>
+    <button class="btn" id="s5-result-btn"></button>
+  </div>
+</div>
+
+<!-- ===== 엔딩 ===== -->
+<div id="ending" class="screen">
+  <div class="rank" id="end-rank-icon"></div>
+  <div class="rank-text" id="end-rank-text"></div>
+  <div class="rank-desc" id="end-rank-desc"></div>
+  <div class="ending-dialogue">
+    <p id="end-dialogue"></p>
+  </div>
+  <div class="time-result" id="end-time"></div>
+  <button class="btn btn-primary" onclick="location.reload()">다시 하기</button>
+</div>
+
+<script>
+// ===== 전역 =====
+let gameStartTime = 0;
+let totalTime = 0;
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startGame() {
+  gameStartTime = Date.now();
+  showScreen('stage1');
+  s1Start();
+}
+
+// ===== STAGE 1 =====
+let s1Phase = 0; // 0=퇴근, 1=나니하원, 2=연타
+let s1Needle = 0;
+let s1Dir = 1;
+let s1Anim = null;
+let s1Speed = 1.5;
+let s1TargetPos = 65;
+
+const s1Phases = [
+  { icon: '🏢', label: '6:00 퇴근 타이밍에 맞춰라!', targetLabel: '6:00', targetPos: 65, speed: 1.2, failMsg: '퇴근 타이밍을 놓쳤다!', failIcon: '😱' },
+  { icon: '👶', label: '6:10 나니 어린이집 하원!', targetLabel: '6:10', targetPos: 75, speed: 1.6, failMsg: '어린이집 선생님에게서 전화가 왔습니다', failIcon: '📞' },
+  { icon: '🚗', label: '차 타고 집까지! 연타!!' }
+];
+
+function s1Start() {
+  s1Phase = 0;
+  s1SetPhase();
+}
+
+function s1UpdateDots() {
+  const dots = [document.getElementById('phase-dot-1'), document.getElementById('phase-dot-2'), document.getElementById('phase-dot-3')];
+  dots.forEach((d, i) => {
+    d.className = 'phase-dot';
+    if (i < s1Phase) d.classList.add('done');
+    if (i === s1Phase) d.classList.add('current');
+  });
+}
+
+function s1SetPhase() {
+  s1UpdateDots();
+  const p = s1Phases[s1Phase];
+  document.getElementById('s1-phase-icon').textContent = p.icon;
+  document.getElementById('s1-timing-label').textContent = p.label;
+
+  if (s1Phase < 2) {
+    // 타이밍 페이즈
+    document.getElementById('s1-bar-section').style.display = '';
+    document.getElementById('s1-mash-section').style.display = 'none';
+    document.getElementById('s1-target-label').textContent = p.targetLabel;
+
+    s1TargetPos = p.targetPos;
+    s1Speed = p.speed;
+
+    const target = document.getElementById('s1-target');
+    const zone = document.getElementById('s1-target-zone');
+    target.style.left = s1TargetPos + '%';
+    const zoneWidth = 8;
+    zone.style.left = (s1TargetPos - zoneWidth / 2) + '%';
+    zone.style.width = zoneWidth + '%';
+
+    s1Needle = 0;
+    s1Dir = 1;
+    document.getElementById('s1-needle').style.left = '0%';
+    s1RunNeedle();
+  } else {
+    // 연타 자동 전환
+    s1StartMash();
+  }
+}
+
+function s1RunNeedle() {
+  if (s1Anim) cancelAnimationFrame(s1Anim);
+  let last = performance.now();
+  function tick(now) {
+    const dt = (now - last) / 1000;
+    last = now;
+    s1Needle += s1Dir * s1Speed * 60 * dt;
+    if (s1Needle > 100) { s1Needle = 100; s1Dir = -1; }
+    if (s1Needle < 0) { s1Needle = 0; s1Dir = 1; }
+    document.getElementById('s1-needle').style.left = s1Needle + '%';
+    s1Anim = requestAnimationFrame(tick);
+  }
+  s1Anim = requestAnimationFrame(tick);
+}
+
+document.getElementById('s1-tap').addEventListener('pointerdown', function(e) {
+  e.preventDefault();
+  if (s1Phase >= 2) return;
+  cancelAnimationFrame(s1Anim);
+
+  const diff = Math.abs(s1Needle - s1TargetPos);
+  if (diff <= 4) {
+    // 성공 — 즉시 다음 페이즈로 연속 전환
+    s1Phase++;
+    if (s1Phase < 2) {
+      // 타이밍 성공 → 다음 타이밍 (연속으로 자연스럽게)
+      document.getElementById('s1-phase-icon').textContent = '✅';
+      setTimeout(() => s1SetPhase(), 600);
+    } else {
+      // 두 번 다 성공 → 연타로 바로 전환
+      document.getElementById('s1-phase-icon').textContent = '✅';
+      document.getElementById('s1-timing-label').textContent = '하원 성공! 차 타고 출발!';
+      setTimeout(() => s1SetPhase(), 800);
+    }
+  } else {
+    // 실패
+    const p = s1Phases[s1Phase];
+    const overlay = document.getElementById('s1-result');
+    document.getElementById('s1-result-icon').textContent = p.failIcon;
+    document.getElementById('s1-result-msg').textContent = p.failMsg;
+    document.getElementById('s1-result-sub').textContent = '다시 도전하세요!';
+    const btn = document.getElementById('s1-result-btn');
+    btn.className = 'btn btn-retry';
+    btn.textContent = '재시도';
+    btn.onclick = () => { overlay.classList.remove('show'); s1SetPhase(); };
+    overlay.classList.add('show');
+  }
+});
+
+function s1StartMash() {
+  document.getElementById('s1-bar-section').style.display = 'none';
+  document.getElementById('s1-mash-section').style.display = '';
+  document.getElementById('s1-phase-icon').textContent = '🚗';
+  document.getElementById('s1-timing-label').textContent = '연타해서 집까지 달려라!';
+  document.getElementById('s1-desc').textContent = '아이 둘 태우고 집으로!';
+  s1UpdateDots();
+
+  let gauge = 0;
+  let mashTaps = 0;
+  let timeLeft = 5.0;
+  const REQUIRED_TAPS = 30;  // 30번 누르면 클리어 (초당 6번)
+
+  document.getElementById('s1-gauge').style.width = '0%';
+  document.getElementById('s1-car').style.left = '8%';
+  document.getElementById('s1-mash-timer').textContent = '5.00';
+
+  let mashActive = true;
+
+  function onTap(e) {
+    e.preventDefault();
+    if (!mashActive) return;
+    mashTaps++;
+    gauge = Math.min(100, (mashTaps / REQUIRED_TAPS) * 100);
+
+    // 즉시 UI 업데이트
+    document.getElementById('s1-gauge').style.width = gauge + '%';
+    document.getElementById('s1-car').style.left = (8 + gauge * 0.7) + '%';
+
+    if (mashTaps >= REQUIRED_TAPS) {
+      mashActive = false;
+      tapEl.removeEventListener('pointerdown', onTap);
+      s1MashResult(true);
+    }
+  }
+
+  const tapEl = document.getElementById('s1-mash-tap');
+  tapEl.addEventListener('pointerdown', onTap);
+
+  let last = performance.now();
+  function tick(now) {
+    if (!mashActive) return;
+    const dt = (now - last) / 1000;
+    last = now;
+    timeLeft -= dt;
+
+    document.getElementById('s1-mash-timer').textContent = Math.max(0, timeLeft).toFixed(2);
+
+    if (timeLeft <= 0) {
+      mashActive = false;
+      tapEl.removeEventListener('pointerdown', onTap);
+      s1MashResult(false);
+      return;
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+function s1MashResult(success) {
+  const overlay = document.getElementById('s1-result');
+  if (success) {
+    document.getElementById('s1-result-icon').textContent = '🏠';
+    document.getElementById('s1-result-msg').textContent = '헥헥... 도착!';
+    document.getElementById('s1-result-sub').textContent = '아이 둘이 현관에서 기다리고 있다.';
+    const btn = document.getElementById('s1-result-btn');
+    btn.className = 'btn btn-primary'; btn.textContent = 'Stage 2로';
+    btn.onclick = () => { overlay.classList.remove('show'); showScreen('stage2'); s2Start(); };
+  } else {
+    document.getElementById('s1-result-icon').textContent = '📞';
+    document.getElementById('s1-result-msg').textContent = '와이프에게서 전화가 왔습니다';
+    document.getElementById('s1-result-sub').textContent = '"여보 어디야? 애들 안 데리러 가?"';
+    const btn = document.getElementById('s1-result-btn');
+    btn.className = 'btn btn-retry'; btn.textContent = '재시도';
+    btn.onclick = () => { overlay.classList.remove('show'); s1Phase = 0; s1Start(); };
+  }
+  overlay.classList.add('show');
+}
+
+// ===== STAGE 2 =====
+let s2Score = 30;
+const s2Data = [
+  {
+    name: '와이프', text: '"왜 이렇게 일찍 와? 무슨 꿍꿍이야?"',
+    choices: [
+      { text: '"아이고 보고싶어서 달려왔지~"', score: 5, msg: '(안 속는 눈빛)' },
+      { text: '"애들 어린이집 끝나길래 바로 데려왔지"', score: 15, msg: '팩트 어필 성공!' },
+      { text: '"명주형이 밥 사준대서..."', score: -30, gameover: true, msg: '솔직하면 죽는다...' }
+    ]
+  },
+  {
+    name: '와이프', text: '"금요일 저녁에 나간다고?"',
+    choices: [
+      { text: '"명주형이 회사에서 힘든 일이 있었나봐.\n좀 들어줘야 할 것 같아"', score: 20, msg: '의리 어필 성공!' },
+      { text: '"한 달에 한 번인데... 안 될까?"', score: 10, msg: '무난한 선택' },
+      { text: '"남자는 가끔 밖에 나가야 해"', score: -100, gameover: true, msg: '현관문이 잠깁니다 🔒' }
+    ]
+  },
+  {
+    name: '와이프', text: '"그래서 애들 밥은? 몇 시에 올 건데?"',
+    choices: [
+      { text: '"배달 시켜놓고 갈게. 9시까지 무조건 올게.\n들어오면서 딸기 사올게"', score: 30, msg: '풀패키지 전략 성공! 🍓' },
+      { text: '"배달 시켜놓을게. 10시쯤?"', score: 10, msg: '그럭저럭...' },
+      { text: '"애들이 알아서 먹겠지..."', score: -100, gameover: true, msg: '...대화가 끊겼습니다' }
+    ]
+  }
+];
+let s2Step = 0;
+
+function s2Start() {
+  s2Score = 30; s2Step = 0;
+  document.getElementById('s2-gauge').style.width = s2Score + '%';
+  s2Render();
+}
+
+function s2Render() {
+  const area = document.getElementById('s2-dialogue');
+  if (s2Step >= s2Data.length) {
+    // 결과
+    if (s2Score >= 40) {
+      const overlay = document.getElementById('s2-result');
+      document.getElementById('s2-result-icon').textContent = '🔓';
+      document.getElementById('s2-result-msg').textContent = '현관문이 열립니다!';
+      document.getElementById('s2-result-sub').textContent = '와이프: "딸기 빼먹으면 다음은 없어"';
+      const btn = document.getElementById('s2-result-btn');
+      btn.className = 'btn btn-primary'; btn.textContent = 'Stage 3으로';
+      btn.onclick = () => { overlay.classList.remove('show'); showScreen('stage3'); s3Start(); };
+      overlay.classList.add('show');
+    } else {
+      const overlay = document.getElementById('s2-result');
+      document.getElementById('s2-result-icon').textContent = '🔒';
+      document.getElementById('s2-result-msg').textContent = '호감도가 부족합니다';
+      document.getElementById('s2-result-sub').textContent = '현관문이 열리지 않습니다...';
+      const btn = document.getElementById('s2-result-btn');
+      btn.className = 'btn btn-retry'; btn.textContent = '재시도';
+      btn.onclick = () => { overlay.classList.remove('show'); s2Start(); };
+      overlay.classList.add('show');
+    }
+    return;
+  }
+
+  const d = s2Data[s2Step];
+  let html = `<div class="dialogue-bubble"><div class="dialogue-name">${d.name}</div><div class="dialogue-text">${d.text}</div></div>`;
+  html += '<div class="dialogue-choices">';
+  d.choices.forEach((c, i) => {
+    html += `<button class="choice-btn" onclick="s2Choose(${s2Step},${i})">${c.text.replace(/\n/g, '<br>')}</button>`;
+  });
+  html += '</div>';
+  area.innerHTML = html;
+}
+
+function s2Choose(step, idx) {
+  const c = s2Data[step].choices[idx];
+  const btns = document.querySelectorAll('.choice-btn');
+  btns.forEach((b, i) => {
+    b.style.pointerEvents = 'none';
+    if (i === idx) {
+      b.classList.add(c.gameover ? 'gameover' : c.score >= 15 ? 'correct' : 'wrong');
+    }
+  });
+
+  s2Score = Math.max(0, Math.min(100, s2Score + c.score));
+  document.getElementById('s2-gauge').style.width = s2Score + '%';
+
+  if (c.gameover) {
+    setTimeout(() => {
+      const overlay = document.getElementById('s2-result');
+      document.getElementById('s2-result-icon').textContent = '💀';
+      document.getElementById('s2-result-msg').textContent = 'GAME OVER';
+      document.getElementById('s2-result-sub').textContent = c.msg;
+      const btn = document.getElementById('s2-result-btn');
+      btn.className = 'btn btn-retry'; btn.textContent = '재시도';
+      btn.onclick = () => { overlay.classList.remove('show'); s2Start(); };
+      overlay.classList.add('show');
+    }, 800);
+    return;
+  }
+
+  setTimeout(() => { s2Step++; s2Render(); }, 1000);
+}
+
+// ===== STAGE 3 =====
+const s3Answer = ['양재', '충무로', '서울역', '대곡', '마두'];
+const s3Lines = ['3호선', '4호선', 'GTX-A', '3호선'];
+const s3AllStations = ['양재', '충무로', '서울역', '대곡', '마두', '수서', '교대', '연신내', '동탄'];
+let s3Selected = [];
+let s3TimerVal = 10;
+let s3TimerInterval = null;
+
+function s3Start() {
+  s3Selected = [];
+  s3TimerVal = 10;
+  document.getElementById('s3-timer').textContent = '10';
+  s3Render();
+  s3TimerInterval = setInterval(() => {
+    s3TimerVal--;
+    document.getElementById('s3-timer').textContent = s3TimerVal;
+    if (s3TimerVal <= 0) {
+      clearInterval(s3TimerInterval);
+      s3Fail('시간 초과! 길을 잃었습니다...');
+    }
+  }, 1000);
+}
+
+function s3Render() {
+  // slots
+  let slotsHtml = '';
+  for (let i = 0; i < 5; i++) {
+    if (i > 0) {
+      const lineLabel = s3Selected.length > i ? s3Lines[i - 1] : '?';
+      slotsHtml += `<span class="slot-arrow">→<br><span style="font-size:9px;color:#2980b9">${s3Selected.length > i ? s3Lines[i-1] : ''}</span></span>`;
+    }
+    if (s3Selected[i]) {
+      slotsHtml += `<div class="slot-station" onclick="s3RemoveLast()">${s3Selected[i]}</div>`;
+    } else {
+      slotsHtml += `<div class="slot-placeholder">${i + 1}</div>`;
+    }
+  }
+  document.getElementById('s3-slots').innerHTML = slotsHtml;
+
+  // pool
+  const shuffled = [...s3AllStations].sort(() => Math.random() - 0.5);
+  let poolHtml = '';
+  s3AllStations.forEach(s => {
+    const used = s3Selected.includes(s);
+    poolHtml += `<div class="pool-station${used ? ' used' : ''}" onclick="s3Pick('${s}')">${s}</div>`;
+  });
+  document.getElementById('s3-pool').innerHTML = poolHtml;
+}
+
+function s3Pick(station) {
+  if (s3Selected.length >= 5) return;
+  if (s3Selected.includes(station)) return;
+  s3Selected.push(station);
+  s3Render();
+}
+
+function s3RemoveLast() {
+  s3Selected.pop();
+  s3Render();
+}
+
+function s3Reset() {
+  s3Selected = [];
+  s3Render();
+}
+
+function s3Submit() {
+  if (s3Selected.length < 5) return;
+  clearInterval(s3TimerInterval);
+
+  const correct = s3Selected.every((s, i) => s === s3Answer[i]);
+  if (correct) {
+    const overlay = document.getElementById('s3-result');
+    document.getElementById('s3-result-icon').textContent = '🗺️';
+    document.getElementById('s3-result-msg').textContent = '루트 완성!';
+    document.getElementById('s3-result-sub').textContent = '양재→충무로→서울역→대곡→마두\n완벽한 경로입니다!';
+    const btn = document.getElementById('s3-result-btn');
+    btn.className = 'btn btn-primary'; btn.textContent = 'Stage 4로';
+    btn.onclick = () => { overlay.classList.remove('show'); showScreen('stage4'); s4Start(); };
+    overlay.classList.add('show');
+  } else {
+    s3Fail('경로가 틀렸습니다! 다시 조합하세요.');
+  }
+}
+
+function s3Fail(msg) {
+  const overlay = document.getElementById('s3-result');
+  document.getElementById('s3-result-icon').textContent = '😵';
+  document.getElementById('s3-result-msg').textContent = msg;
+
+  // 함정 메시지
+  let sub = '';
+  if (s3Selected.includes('동탄')) sub = '동탄에 도착했습니다...';
+  else if (s3Selected.includes('연신내')) sub = '연신내에서 3호선을 탔지만 돌아가는 길입니다...';
+  else if (s3Selected.includes('수서')) sub = '수서에서 GTX를 탈 수 있지만 양재에서 너무 멉니다...';
+  else sub = '올바른 경로를 찾아보세요!';
+  document.getElementById('s3-result-sub').textContent = sub;
+
+  const btn = document.getElementById('s3-result-btn');
+  btn.className = 'btn btn-retry'; btn.textContent = '재시도';
+  btn.onclick = () => { overlay.classList.remove('show'); s3Start(); };
+  overlay.classList.add('show');
+}
+
+// ===== STAGE 4 =====
+let s4Step = 0;
+
+function s4Start() {
+  s4Step = 0;
+  s4Render();
+}
+
+function s4Render() {
+  const content = document.getElementById('s4-content');
+  const desc = document.getElementById('s4-desc');
+
+  if (s4Step === 0) {
+    desc.textContent = '미니게임 1/3: 교통카드 충전';
+    content.innerHTML = `
+      <div class="mini-question">
+        교통카드 잔액: <strong>1,200원</strong><br>
+        서울역→대곡 GTX 요금: <strong>3,500원</strong><br><br>
+        얼마를 충전해야 할까?
+      </div>
+      <div class="mini-options">
+        <button class="mini-opt" onclick="s4Answer(0,1)">1,000원</button>
+        <button class="mini-opt" onclick="s4Answer(0,2)">2,000원</button>
+        <button class="mini-opt" onclick="s4Answer(0,3)">3,000원</button>
+        <button class="mini-opt" onclick="s4Answer(0,4)">5,000원</button>
+      </div>`;
+  } else if (s4Step === 1) {
+    desc.textContent = '미니게임 2/3: 방향 선택';
+    content.innerHTML = `
+      <div class="mini-question">
+        서울역 GTX 승강장<br><br>
+        어느 방향으로 타야 할까?
+      </div>
+      <div class="mini-options">
+        <button class="mini-opt" onclick="s4Answer(1,1)">← 운정·킨텍스 방면</button>
+        <button class="mini-opt" onclick="s4Answer(1,2)">동탄·수서 방면 →</button>
+      </div>`;
+  } else if (s4Step === 2) {
+    desc.textContent = '미니게임 3/3: 카드 뒤집기';
+    s4StartMemory();
+  }
+}
+
+function s4Answer(step, choice) {
+  const opts = document.querySelectorAll('.mini-opt');
+  const correct = (step === 0 && choice === 3) || (step === 1 && choice === 1);
+
+  opts.forEach((o, i) => {
+    o.style.pointerEvents = 'none';
+    if (step === 0) { if (i === 2) o.classList.add('correct'); else if (i === choice - 1 && choice !== 3) o.classList.add('wrong'); }
+    if (step === 1) { if (i === 0) o.classList.add('correct'); else if (i === choice - 1 && choice !== 1) o.classList.add('wrong'); }
+  });
+
+  if (correct) {
+    setTimeout(() => { s4Step++; s4Render(); }, 800);
+  } else {
+    setTimeout(() => {
+      const overlay = document.getElementById('s4-result');
+      document.getElementById('s4-result-icon').textContent = step === 0 ? '💳' : '😱';
+      document.getElementById('s4-result-msg').textContent = step === 0 ? '잔액이 부족합니다!' : '동탄행 열차에 탑승했습니다!';
+      document.getElementById('s4-result-sub').textContent = '다시 도전!';
+      const btn = document.getElementById('s4-result-btn');
+      btn.className = 'btn btn-retry'; btn.textContent = '재시도';
+      btn.onclick = () => { overlay.classList.remove('show'); s4Render(); };
+      overlay.classList.add('show');
+    }, 800);
+  }
+}
+
+function s4StartMemory() {
+  const stations = ['서울', '대곡', '마두', '양재', '충무로', '킨텍스', '운정', '동탄'];
+  let cards = [...stations, ...stations];
+  for (let i = cards.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [cards[i], cards[j]] = [cards[j], cards[i]]; }
+
+  let flipped = [];
+  let matched = 0;
+  let locked = false;
+  let memTimer = 15;
+  let memInterval = null;
+  let memActive = true;
+
+  const content = document.getElementById('s4-content');
+  let html = '<div style="text-align:center;font-size:24px;font-weight:900;color:#e74c3c;margin-bottom:10px" id="s4-mem-timer">15</div>';
+  html += '<div class="memory-grid">';
+  cards.forEach((c, i) => {
+    html += `<div class="memory-card" data-idx="${i}" data-val="${c}">${c}</div>`;
+  });
+  html += '</div>';
+  content.innerHTML = html;
+
+  memInterval = setInterval(() => {
+    if (!memActive) return;
+    memTimer--;
+    const timerEl = document.getElementById('s4-mem-timer');
+    if (timerEl) timerEl.textContent = memTimer;
+    if (memTimer <= 0) {
+      memActive = false;
+      clearInterval(memInterval);
+      const overlay = document.getElementById('s4-result');
+      document.getElementById('s4-result-icon').textContent = '⏰';
+      document.getElementById('s4-result-msg').textContent = '시간 초과!';
+      document.getElementById('s4-result-sub').textContent = '카드를 더 빨리 맞춰보세요!';
+      const btn = document.getElementById('s4-result-btn');
+      btn.className = 'btn btn-retry'; btn.textContent = '재시도';
+      btn.onclick = () => { overlay.classList.remove('show'); s4Render(); };
+      overlay.classList.add('show');
+    }
+  }, 1000);
+
+  document.querySelectorAll('.memory-card').forEach(card => {
+    card.addEventListener('pointerdown', function(e) {
+      e.preventDefault();
+      if (!memActive || locked) return;
+      if (this.classList.contains('flipped') || this.classList.contains('matched')) return;
+
+      this.classList.add('flipped');
+      flipped.push(this);
+
+      if (flipped.length === 2) {
+        locked = true;
+        const [a, b] = flipped;
+        if (a.dataset.val === b.dataset.val) {
+          a.classList.add('matched'); b.classList.add('matched');
+          matched++;
+          flipped = []; locked = false;
+          if (matched === 8) {
+            memActive = false;
+            clearInterval(memInterval);
+            setTimeout(() => {
+              const overlay = document.getElementById('s4-result');
+              document.getElementById('s4-result-icon').textContent = '🚄';
+              document.getElementById('s4-result-msg').textContent = '다음 정차역은 대곡역입니다';
+              document.getElementById('s4-result-sub').textContent = 'GTX 첫 탑승 성공!';
+              const btn = document.getElementById('s4-result-btn');
+              btn.className = 'btn btn-primary'; btn.textContent = 'Stage 5로';
+              btn.onclick = () => { overlay.classList.remove('show'); showScreen('stage5'); s5Start(); };
+              overlay.classList.add('show');
+            }, 500);
+          }
+        } else {
+          setTimeout(() => { a.classList.remove('flipped'); b.classList.remove('flipped'); flipped = []; locked = false; }, 600);
+        }
+      }
+    });
+  });
+}
+
+// ===== STAGE 5 =====
+const s5Map = [
+  [1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,0,0,0,1,0,0,0,1,0,0,0,1],
+  [1,0,1,0,1,0,1,0,1,0,1,0,1],
+  [1,0,1,0,0,0,1,0,0,0,1,0,1],
+  [1,0,1,1,1,0,1,1,1,0,1,0,1],
+  [1,0,0,0,1,0,0,0,0,0,1,0,1],
+  [1,1,1,0,1,0,1,1,1,1,1,0,1],
+  [1,0,0,0,0,0,1,0,0,0,0,0,1],
+  [1,0,1,1,1,1,1,0,1,1,1,0,1],
+  [1,0,0,0,0,0,0,0,1,0,0,0,1],
+  [1,1,1,0,1,1,1,0,1,0,1,1,1],
+  [1,0,0,0,1,0,0,0,0,0,0,0,1],
+  [1,1,1,1,1,1,1,1,1,1,1,1,1],
+];
+// exits: 1번(1,11), 4번(11,1), 3번(11,11) — 3번이 정답
+const s5Exits = { '1,11': {num: 1, correct: false}, '11,1': {num: 4, correct: false}, '11,11': {num: 3, correct: true} };
+let s5Px = 1, s5Py = 1;
+let s5Timer = 30;
+let s5Interval = null;
+
+function s5Start() {
+  s5Px = 1; s5Py = 1; s5Timer = 30;
+  // place exits
+  s5Map[11][1] = 2;  // 1번 출구 (wrong) - 좌하단
+  s5Map[1][11] = 3;  // 4번 출구 (wrong) - 우상단
+  s5Map[11][11] = 4; // 3번 출구 (correct) - 우하단
+
+  s5RenderMaze();
+  document.getElementById('s5-timer').textContent = '30';
+  s5Interval = setInterval(() => {
+    s5Timer--;
+    document.getElementById('s5-timer').textContent = s5Timer;
+    if (s5Timer <= 0) {
+      clearInterval(s5Interval);
+      s5Result(false, '시간 초과!', '명주형: "야 어디야 ㅋㅋ"');
+    }
+  }, 1000);
+}
+
+function s5RenderMaze() {
+  const grid = document.getElementById('s5-maze');
+  grid.style.gridTemplateColumns = `repeat(${s5Map[0].length}, 1fr)`;
+  let html = '';
+  for (let y = 0; y < s5Map.length; y++) {
+    for (let x = 0; x < s5Map[y].length; x++) {
+      const v = s5Map[y][x];
+      if (x === s5Px && y === s5Py) {
+        html += `<div class="maze-cell player">🏃</div>`;
+      } else if (v === 1) {
+        html += `<div class="maze-cell wall"></div>`;
+      } else if (v === 2) {
+        html += `<div class="maze-cell wrong-exit">1번</div>`;
+      } else if (v === 3) {
+        html += `<div class="maze-cell wrong-exit">4번</div>`;
+      } else if (v === 4) {
+        html += `<div class="maze-cell exit">3번</div>`;
+      } else {
+        html += `<div class="maze-cell path"></div>`;
+      }
+    }
+  }
+  grid.innerHTML = html;
+}
+
+function s5Move(dx, dy) {
+  const nx = s5Px + dx;
+  const ny = s5Py + dy;
+  if (ny < 0 || ny >= s5Map.length || nx < 0 || nx >= s5Map[0].length) return;
+  if (s5Map[ny][nx] === 1) return;
+
+  // 출구 체크
+  const key = nx + ',' + ny;
+  if (s5Exits[key]) {
+    clearInterval(s5Interval);
+    s5Px = nx; s5Py = ny;
+    s5RenderMaze();
+    if (s5Exits[key].correct) {
+      s5Result(true, '3번 출구 도착!', '명주형이 보인다!');
+    } else {
+      s5Result(false, `${s5Exits[key].num}번 출구...`, '명주형이 안 보입니다 😂');
+    }
+    return;
+  }
+
+  s5Px = nx; s5Py = ny;
+  s5RenderMaze();
+}
+
+function s5Result(success, msg, sub) {
+  const overlay = document.getElementById('s5-result');
+  document.getElementById('s5-result-icon').textContent = success ? '🎉' : '😵';
+  document.getElementById('s5-result-msg').textContent = msg;
+  document.getElementById('s5-result-sub').textContent = sub;
+  const btn = document.getElementById('s5-result-btn');
+  if (success) {
+    btn.className = 'btn btn-primary'; btn.textContent = '엔딩 보기';
+    btn.onclick = () => { overlay.classList.remove('show'); showEnding(); };
+  } else {
+    btn.className = 'btn btn-retry'; btn.textContent = '재시도';
+    btn.onclick = () => { overlay.classList.remove('show'); s5Start(); };
+  }
+  overlay.classList.add('show');
+}
+
+// ===== 엔딩 =====
+function showEnding() {
+  totalTime = Math.floor((Date.now() - gameStartTime) / 1000);
+  const min = Math.floor(totalTime / 60);
+  const sec = totalTime % 60;
+
+  let rankIcon, rankText, rankDesc;
+  if (totalTime <= 180) {
+    rankIcon = '⭐'; rankText = 'S랭크'; rankDesc = '프로 가장의 금요일';
+  } else if (totalTime <= 300) {
+    rankIcon = '🥩'; rankText = 'A랭크'; rankDesc = '나쁘지 않은 여정';
+  } else if (totalTime <= 420) {
+    rankIcon = '😮‍💨'; rankText = 'B랭크'; rankDesc = '간신히 도착 (라스트오더 걸림)';
+  } else {
+    rankIcon = '😂'; rankText = 'C랭크'; rankDesc = '명주형이 먼저 먹고 있었다';
+  }
+
+  document.getElementById('end-rank-icon').textContent = rankIcon;
+  document.getElementById('end-rank-text').textContent = rankText;
+  document.getElementById('end-rank-desc').textContent = rankDesc;
+  document.getElementById('end-time').textContent = `클리어 시간: ${min}분 ${sec}초`;
+  document.getElementById('end-dialogue').innerHTML =
+    '명주형: "왔어? 근데 왜 땀을 그렇게 흘려 ㅋㅋ"<br><br>' +
+    '박주석: "형... GTX 처음 타봤어..."<br><br>' +
+    '명주형: "ㅋㅋㅋ 고생했다 오늘 내가 쏜다"';
+
+  showScreen('ending');
+}
+</script>
+</body>
+</html>
