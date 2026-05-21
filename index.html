@@ -444,23 +444,9 @@
   <div class="stage-header">
     <div class="stage-num">STAGE 5</div>
     <h2>라스트 스퍼트</h2>
-    <div class="desc">마두역 3번 출구를 찾아라!</div>
+    <div class="desc" id="s5-desc">명주형의 카톡을 잘 읽어!</div>
   </div>
-  <div class="maze-area">
-    <div class="maze-timer" id="s5-timer">30</div>
-    <div class="maze-grid" id="s5-maze"></div>
-    <div class="maze-controls">
-      <div></div>
-      <button class="maze-btn" onclick="s5Move(0,-1)">↑</button>
-      <div></div>
-      <button class="maze-btn" onclick="s5Move(-1,0)">←</button>
-      <div></div>
-      <button class="maze-btn" onclick="s5Move(1,0)">→</button>
-      <div></div>
-      <button class="maze-btn" onclick="s5Move(0,1)">↓</button>
-      <div></div>
-    </div>
-  </div>
+  <div class="dialogue-area" style="max-width:420px;width:100%;padding:0 20px" id="s5-content"></div>
   <div class="result-overlay" id="s5-result">
     <div class="result-icon" id="s5-result-icon"></div>
     <div class="result-msg" id="s5-result-msg"></div>
@@ -919,15 +905,8 @@ let s4Step = 0;
 let s4ChargeTimer = null;
 let s4ChargeActive = false;
 
-// 충전 퀴즈 랜덤 데이터
-const s4ChargeProblems = [
-  { balance: 1200, fare: 3500 },
-  { balance: 800, fare: 3500 },
-  { balance: 2100, fare: 3500 },
-  { balance: 1500, fare: 3500 },
-  { balance: 500, fare: 3500 },
-  { balance: 1800, fare: 3500 },
-];
+// 충전 퀴즈 — 100원 단위 헷갈리게
+const s4ChargeFares = [3350, 3500, 2850, 3150, 2950, 3250];
 let s4ChargeProbIdx = 0;
 
 function s4Start() {
@@ -936,22 +915,21 @@ function s4Start() {
   s4Render();
 }
 
-function s4GetChargeOptions(balance, fare) {
+function s4GenChargeProblem() {
+  // 잔액 100원 단위 랜덤 (300~2400)
+  const balance = (Math.floor(Math.random() * 22) + 3) * 100; // 300~2400
+  const fare = s4ChargeFares[s4ChargeProbIdx % s4ChargeFares.length];
   const need = fare - balance;
-  // 정답: 1000원 단위 올림
-  const correct = Math.ceil(need / 1000) * 1000;
-  // 오답들: 정답보다 1000원 적은 것, 정답+1000, 정답+2000
-  const wrong1 = correct - 1000;
-  const wrong2 = correct + 1000;
-  const wrong3 = correct + 2000;
-  let opts = [correct, wrong1, wrong2, wrong3].filter(v => v > 0);
-  // 중복 제거 후 부족하면 추가
-  opts = [...new Set(opts)];
-  while (opts.length < 4) opts.push(opts[opts.length-1] + 1000);
-  opts = opts.slice(0, 4);
-  // 셔플
+  // 정답: 100원 단위 올림
+  const correct = Math.ceil(need / 100) * 100;
+  // 오답: ±100, ±200 등 헷갈리게
+  let wrongs = [correct - 100, correct + 100, correct - 200, correct + 200, correct + 300, correct - 300];
+  wrongs = wrongs.filter(v => v > 0 && v !== correct);
+  // 셔플 후 3개만
+  for (let i = wrongs.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i+1)); [wrongs[i],wrongs[j]] = [wrongs[j],wrongs[i]]; }
+  let opts = [correct, ...wrongs.slice(0, 3)];
   for (let i = opts.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i+1)); [opts[i],opts[j]] = [opts[j],opts[i]]; }
-  return { correct, options: opts };
+  return { balance, fare, correct, options: opts };
 }
 
 function s4Render() {
@@ -959,15 +937,14 @@ function s4Render() {
   const desc = document.getElementById('s4-desc');
 
   if (s4Step === 0) {
-    // 충전 퀴즈 — 랜덤 금액, 4초 제한
-    const prob = s4ChargeProblems[s4ChargeProbIdx % s4ChargeProblems.length];
-    const { correct, options } = s4GetChargeOptions(prob.balance, prob.fare);
+    // 충전 퀴즈 — 100원 단위, 4초 제한
+    const prob = s4GenChargeProblem();
     s4ChargeActive = true;
     let timeLeft = 4;
 
     desc.textContent = '미니게임 1/3: 교통카드 충전 (4초!)';
-    let optsHtml = options.map(v =>
-      `<button class="mini-opt" onclick="s4ChargeAnswer(${v},${correct})">${v.toLocaleString()}원</button>`
+    let optsHtml = prob.options.map(v =>
+      `<button class="mini-opt" onclick="s4ChargeAnswer(${v},${prob.correct})">${v.toLocaleString()}원</button>`
     ).join('');
     content.innerHTML = `
       <div style="text-align:center;font-size:28px;font-weight:900;color:#e74c3c;margin-bottom:10px" id="s4-charge-timer">4</div>
@@ -975,7 +952,7 @@ function s4Render() {
         교통카드 잔액: <strong>${prob.balance.toLocaleString()}원</strong><br>
         GTX 요금: <strong>${prob.fare.toLocaleString()}원</strong><br><br>
         <strong>정확히</strong> 얼마를 충전해야 할까?<br>
-        <span style="font-size:12px;color:#889">(1,000원 단위, 요금 이상 최소 금액)</span>
+        <span style="font-size:12px;color:#889">(100원 단위, 부족분 이상 최소 금액)</span>
       </div>
       <div class="mini-options">${optsHtml}</div>`;
 
@@ -1074,12 +1051,12 @@ function s4StartMemory() {
   let flipped = [];
   let matched = 0;
   let locked = false;
-  let memTimer = 40;
+  let memTimer = 30;
   let memInterval = null;
   let memActive = true;
 
   const content = document.getElementById('s4-content');
-  let html = '<div style="text-align:center;font-size:24px;font-weight:900;color:#e74c3c;margin-bottom:10px" id="s4-mem-timer">40</div>';
+  let html = '<div style="text-align:center;font-size:24px;font-weight:900;color:#e74c3c;margin-bottom:10px" id="s4-mem-timer">30</div>';
   html += '<div class="memory-grid">';
   cards.forEach((c, i) => {
     html += `<div class="memory-card" data-idx="${i}" data-val="${c}">${c}</div>`;
@@ -1144,109 +1121,171 @@ function s4StartMemory() {
   });
 }
 
-// ===== STAGE 5 =====
-const s5Map = [
-  [1,1,1,1,1,1,1,1,1,1,1,1,1],
-  [1,0,0,0,1,0,0,0,1,0,0,0,1],
-  [1,0,1,0,1,0,1,0,1,0,1,0,1],
-  [1,0,1,0,0,0,1,0,0,0,1,0,1],
-  [1,0,1,1,1,0,1,1,1,0,1,0,1],
-  [1,0,0,0,1,0,0,0,0,0,1,0,1],
-  [1,1,1,0,1,0,1,1,1,1,1,0,1],
-  [1,0,0,0,0,0,1,0,0,0,0,0,1],
-  [1,0,1,1,1,1,1,0,1,1,1,0,1],
-  [1,0,0,0,0,0,0,0,1,0,0,0,1],
-  [1,1,1,0,1,1,1,0,1,0,1,1,1],
-  [1,0,0,0,1,0,0,0,0,0,0,0,1],
-  [1,1,1,1,1,1,1,1,1,1,1,1,1],
+// ===== STAGE 5: 명주형의 카톡 퀴즈 =====
+let s5Step = 0;
+let s5Timer = null;
+let s5Active = false;
+
+// 명주형이 카톡을 빠르게 보내고 사라짐 → 기억해서 정답 골라야 함
+const s5Rounds = [
+  {
+    kakao: '고기집 자리 없대 ㅋㅋ 다른 데 알아봄',
+    kakao2: '여기 괜찮은 데 있다\n마두역 3번출구 파란간판 "명가숯불갈비"',
+    showTime: 3000,
+    question: '명주형이 말한 출구 번호는?',
+    options: ['1번 출구', '2번 출구', '3번 출구', '4번 출구'],
+    answer: 2, // idx
+    timeLimit: 5,
+    failMsg: '출구를 잘못 나왔습니다...'
+  },
+  {
+    kakao: '아 그리고 가게 들어오면\n내 이름으로 예약했어 2명',
+    kakao2: '예약명 김명주 ㄱㄱ',
+    showTime: 2500,
+    question: '예약명은?',
+    options: ['박주석', '김명주', '김주석', '박명주'],
+    answer: 1,
+    timeLimit: 4,
+    failMsg: '예약을 못 찾았습니다...'
+  },
+  {
+    kakao: '아 맞다 내가 지금 입구에서 기다리고 있는데',
+    kakao2: '검은 패딩에 회색 모자 쓰고 있어\n빨리 와 배고파 죽겠다 🥩',
+    showTime: 2500,
+    question: '명주형이 쓰고 있는 모자 색은?',
+    options: ['검은색', '흰색', '회색', '파란색'],
+    answer: 2,
+    timeLimit: 4,
+    failMsg: '다른 사람한테 말을 걸었습니다...'
+  },
+  {
+    kakao: '너 도착하면 바로 주문할건데',
+    kakao2: '생갈비 2인분이랑 물냉 하나\n된장찌개 하나 시킬게\n너 소주 몇 병 마실래?',
+    showTime: 3000,
+    question: '명주형이 시키겠다고 한 메뉴가 아닌 것은?',
+    options: ['생갈비', '물냉', '비빔냉면', '된장찌개'],
+    answer: 2,
+    timeLimit: 5,
+    failMsg: '주문을 틀렸습니다...'
+  },
+  {
+    kakao: '야 거의 다 왔지?',
+    kakao2: '나 테이블 8번에 앉아있어\n빨리 와!!!',
+    showTime: 2000,
+    question: '테이블 번호는?',
+    options: ['6번', '7번', '8번', '9번'],
+    answer: 2,
+    timeLimit: 3,
+    failMsg: '엉뚱한 테이블에 앉았습니다...'
+  }
 ];
-// exits: 1번(1,11), 4번(11,1), 3번(11,11) — 3번이 정답
-const s5Exits = { '1,11': {num: 1, correct: false}, '11,1': {num: 4, correct: false}, '11,11': {num: 3, correct: true} };
-let s5Px = 1, s5Py = 1;
-let s5Timer = 30;
-let s5Interval = null;
 
 function s5Start() {
-  s5Px = 1; s5Py = 1; s5Timer = 30;
-  // place exits
-  s5Map[11][1] = 2;  // 1번 출구 (wrong) - 좌하단
-  s5Map[1][11] = 3;  // 4번 출구 (wrong) - 우상단
-  s5Map[11][11] = 4; // 3번 출구 (correct) - 우하단
+  s5Step = 0;
+  s5Active = true;
+  s5ShowKakao();
+}
 
-  s5RenderMaze();
-  document.getElementById('s5-timer').textContent = '30';
-  s5Interval = setInterval(() => {
-    s5Timer--;
-    document.getElementById('s5-timer').textContent = s5Timer;
-    if (s5Timer <= 0) {
-      clearInterval(s5Interval);
-      s5Result(false, '시간 초과!', '명주형: "야 어디야 ㅋㅋ"');
+function s5ShowKakao() {
+  if (s5Step >= s5Rounds.length) {
+    // 전부 클리어!
+    s5Win();
+    return;
+  }
+
+  const r = s5Rounds[s5Step];
+  const content = document.getElementById('s5-content');
+  document.getElementById('s5-desc').textContent = `카톡 ${s5Step + 1}/${s5Rounds.length} — 잘 읽어!`;
+
+  // 카톡 메시지 표시
+  content.innerHTML = `
+    <div style="margin-bottom:12px">
+      <div class="dialogue-bubble" style="background:#ffe812;border:none">
+        <div class="dialogue-name" style="color:#333">명주형 💬</div>
+        <div class="dialogue-text" style="color:#333">${r.kakao}</div>
+      </div>
+    </div>
+    <div>
+      <div class="dialogue-bubble" style="background:#ffe812;border:none">
+        <div class="dialogue-text" style="color:#333;white-space:pre-line">${r.kakao2}</div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:16px;color:#e74c3c;font-weight:700;font-size:14px">
+      잘 기억해! 곧 사라집니다...
+    </div>`;
+
+  // 일정 시간 후 사라지고 퀴즈 출제
+  setTimeout(() => {
+    if (!s5Active) return;
+    s5ShowQuestion();
+  }, r.showTime);
+}
+
+function s5ShowQuestion() {
+  const r = s5Rounds[s5Step];
+  const content = document.getElementById('s5-content');
+  let timeLeft = r.timeLimit;
+
+  let optsHtml = r.options.map((o, i) =>
+    `<button class="choice-btn" onclick="s5Answer(${i})">${o}</button>`
+  ).join('');
+
+  content.innerHTML = `
+    <div style="text-align:center;font-size:28px;font-weight:900;color:#e74c3c;margin-bottom:12px" id="s5-q-timer">${timeLeft}</div>
+    <div class="dialogue-bubble">
+      <div class="dialogue-text" style="text-align:center;font-size:16px;font-weight:700">${r.question}</div>
+    </div>
+    <div class="dialogue-choices">${optsHtml}</div>`;
+
+  if (s5Timer) clearInterval(s5Timer);
+  s5Timer = setInterval(() => {
+    timeLeft--;
+    const el = document.getElementById('s5-q-timer');
+    if (el) el.textContent = timeLeft;
+    if (timeLeft <= 0) {
+      clearInterval(s5Timer);
+      s5Fail('시간 초과! ' + r.failMsg);
     }
   }, 1000);
 }
 
-function s5RenderMaze() {
-  const grid = document.getElementById('s5-maze');
-  grid.style.gridTemplateColumns = `repeat(${s5Map[0].length}, 1fr)`;
-  let html = '';
-  for (let y = 0; y < s5Map.length; y++) {
-    for (let x = 0; x < s5Map[y].length; x++) {
-      const v = s5Map[y][x];
-      if (x === s5Px && y === s5Py) {
-        html += `<div class="maze-cell player">🏃</div>`;
-      } else if (v === 1) {
-        html += `<div class="maze-cell wall"></div>`;
-      } else if (v === 2) {
-        html += `<div class="maze-cell wrong-exit">1번</div>`;
-      } else if (v === 3) {
-        html += `<div class="maze-cell wrong-exit">4번</div>`;
-      } else if (v === 4) {
-        html += `<div class="maze-cell exit">3번</div>`;
-      } else {
-        html += `<div class="maze-cell path"></div>`;
-      }
-    }
-  }
-  grid.innerHTML = html;
-}
+function s5Answer(idx) {
+  clearInterval(s5Timer);
+  const r = s5Rounds[s5Step];
+  const btns = document.querySelectorAll('.choice-btn');
+  btns.forEach((b, i) => {
+    b.style.pointerEvents = 'none';
+    if (i === r.answer) b.classList.add('correct');
+    else if (i === idx && idx !== r.answer) b.classList.add('wrong');
+  });
 
-function s5Move(dx, dy) {
-  const nx = s5Px + dx;
-  const ny = s5Py + dy;
-  if (ny < 0 || ny >= s5Map.length || nx < 0 || nx >= s5Map[0].length) return;
-  if (s5Map[ny][nx] === 1) return;
-
-  // 출구 체크
-  const key = nx + ',' + ny;
-  if (s5Exits[key]) {
-    clearInterval(s5Interval);
-    s5Px = nx; s5Py = ny;
-    s5RenderMaze();
-    if (s5Exits[key].correct) {
-      s5Result(true, '3번 출구 도착!', '명주형이 보인다!');
-    } else {
-      s5Result(false, `${s5Exits[key].num}번 출구...`, '명주형이 안 보입니다 😂');
-    }
-    return;
-  }
-
-  s5Px = nx; s5Py = ny;
-  s5RenderMaze();
-}
-
-function s5Result(success, msg, sub) {
-  const overlay = document.getElementById('s5-result');
-  document.getElementById('s5-result-icon').textContent = success ? '🎉' : '😵';
-  document.getElementById('s5-result-msg').textContent = msg;
-  document.getElementById('s5-result-sub').textContent = sub;
-  const btn = document.getElementById('s5-result-btn');
-  if (success) {
-    btn.className = 'btn btn-primary'; btn.textContent = '엔딩 보기';
-    btn.onclick = () => { overlay.classList.remove('show'); showEnding(); };
+  if (idx === r.answer) {
+    s5Step++;
+    setTimeout(() => s5ShowKakao(), 800);
   } else {
-    btn.className = 'btn btn-retry'; btn.textContent = '재시도';
-    btn.onclick = () => { overlay.classList.remove('show'); s5Start(); };
+    setTimeout(() => s5Fail(r.failMsg), 800);
   }
+}
+
+function s5Fail(msg) {
+  const overlay = document.getElementById('s5-result');
+  document.getElementById('s5-result-icon').textContent = '😵';
+  document.getElementById('s5-result-msg').textContent = msg;
+  document.getElementById('s5-result-sub').textContent = '명주형: "야 어디야 ㅋㅋ"';
+  const btn = document.getElementById('s5-result-btn');
+  btn.className = 'btn btn-retry'; btn.textContent = '재시도';
+  btn.onclick = () => { overlay.classList.remove('show'); s5Start(); };
+  overlay.classList.add('show');
+}
+
+function s5Win() {
+  const overlay = document.getElementById('s5-result');
+  document.getElementById('s5-result-icon').textContent = '🎉';
+  document.getElementById('s5-result-msg').textContent = '명주형을 찾았다!';
+  document.getElementById('s5-result-sub').textContent = '테이블 8번, 검은 패딩에 회색 모자!';
+  const btn = document.getElementById('s5-result-btn');
+  btn.className = 'btn btn-primary'; btn.textContent = '엔딩 보기';
+  btn.onclick = () => { overlay.classList.remove('show'); showEnding(); };
   overlay.classList.add('show');
 }
 
